@@ -3,6 +3,7 @@
 import requests
 from bs4 import BeautifulSoup
 import sqlite3
+import string
 
 rulings = {
     'true': 'true',
@@ -22,21 +23,31 @@ def configure_database():
     cursor = database.cursor()
     create_table = "CREATE TABLE IF NOT EXISTS dataset (id INTEGER PRIMARY KEY AUTOINCREMENT, " \
                    "title TEXT NOT NULL UNIQUE, " \
-                   "text TEXT NOT NULL)"
+                   "texte TEXT NOT NULL," \
+                   "ruling TEXT NOT NULL)"
 
     cursor.execute(create_table)
     cursor.close()
 
 
-def add_entry_to_database(title, text):
+import json
+
+
+def add_entry_to_database(title, text, ruling):
     cursor = database.cursor()
-    query = "INSERT INTO dataset (title, text) VALUES (?, ?)"
-    cursor.execute(query, [title, text])
+    query = 'INSERT INTO dataset (title, texte, ruling) VALUES ("%s", "%s", "%s")' % (title, text, ruling)
+
+    cursor.execute(query)
+    database.commit()
     cursor.close()
 
 
 def clean():
     database.close()
+
+
+def filter_text(text):
+    return "".join(filter(lambda x: x in string.printable, text)).strip().replace('"','')
 
 
 def get_article(article_url):
@@ -47,6 +58,8 @@ def get_article(article_url):
     article = soup.find('article', class_="m-textblock").find_all('p')
     text = " ".join(
         [paragraph.get_text() for paragraph in article[:-1]])  # Remove the last paragraph that say "We rate this true"
+
+    text = filter_text(text)
     return text
 
 
@@ -62,11 +75,11 @@ def create_dataset():
             for title_div in title_divs:
                 articles = {}
                 link = list(title_div.children)[1]
-                title = link.get_text()
+                title = filter_text(link.get_text())
                 article_url = link['href']
 
                 text = get_article(base_url + article_url)
-                add_entry_to_database(title, text)
+                add_entry_to_database(title, text, ruling)
 
         else:
             print("Error while retrieving url: {}".format(ruling_url))

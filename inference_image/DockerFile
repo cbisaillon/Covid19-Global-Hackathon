@@ -1,0 +1,38 @@
+FROM nvidia/cuda:9.0-base-ubuntu16.04
+
+ENV PATH="/root/miniconda3/bin:${PATH}"
+ARG PATH="/root/miniconda3/bin:${PATH}"
+
+RUN apt-get -y update && apt-get install -y --no-install-recommends \
+         wget \
+         python \
+         nginx \
+         ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN wget https://bootstrap.pypa.io/get-pip.py && python get-pip.py && \
+    pip install torch===1.4.0 torchvision===0.5.0 -f https://download.pytorch.org/whl/torch_stable.html && \
+    pip install numpy==1.16.2 scipy==1.2.1 scikit-learn==0.20.2 pandas flask gevent gunicorn && \
+        (cd /usr/local/lib/python2.7/dist-packages/scipy/.libs; rm *; ln ../../numpy/.libs/* .) && \
+        rm -rf /root/.cache
+
+#Install miniconda
+RUN wget \
+    https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+    && mkdir /root/.conda \
+    && bash Miniconda3-latest-Linux-x86_64.sh -b \
+    && rm -f Miniconda3-latest-Linux-x86_64.sh
+
+COPY . /opt/program/
+
+WORKDIR /opt/program
+RUN conda env create -f environment.yml
+
+SHELL ["conda", "install", "-c", "conda-forge", "-n", "fake-news-classifier", "transformers"]
+
+SHELL ["conda", "run", "-n", "fake-news-classifier", "/bin/bash", "-c"]
+
+#RUN conda install pytorch torchvision cudatoolkit=10.1 -c pytorch
+
+COPY inference.py .
+ENTRYPOINT ["conda", "run", "-n", "fake-news-classifier", "python", "inference.py"]

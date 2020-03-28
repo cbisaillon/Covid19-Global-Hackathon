@@ -1,0 +1,16 @@
+name: fake-news-classifier
+channels:
+  - pytorch
+  - defaults
+dependencies:
+  - python=3.6
+  - pytorch
+  - torchvision
+  - pip:
+    - boto3==1.12.30
+    - botocore==1.15.30
+    - chalice==1.13.0
+    - flask==1.1.1
+    - numpy==1.18.2
+    - transformers==2.6.0
+

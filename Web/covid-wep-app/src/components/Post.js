@@ -1,12 +1,19 @@
 import React from 'react'
-import { Icon } from 'react-materialize';
 import { Dropdown, DropdownButton } from 'react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faThumbsUp, faThumbsDown } from '@fortawesome/free-solid-svg-icons';
+import ReadMoreAndLess from 'react-read-more-less';
+import Popup from "reactjs-popup";
 import '../App.css';
 
 export default (props) => {
 
     const postStyle = {
         marginTop: "25px"
+    }
+
+    const iconStyle = {
+        margin: 12
     }
 
     return (
@@ -40,21 +47,29 @@ export default (props) => {
                                 <div style={{ fontSize: 12, color: "gray" }}>{props.Time}</div>
                             </div>
 
-                            <DropdownButton id="dropdown-custom-3" title={<Icon>more_vert</Icon>}>
-                                <Dropdown.Item href="#/action-1">Action</Dropdown.Item>
-                                <Dropdown.Item href="#/action-2">Another action</Dropdown.Item>
-                                <Dropdown.Item href="#/action-3">Something else</Dropdown.Item>
+                            <Popup trigger={<div> <FontAwesomeIcon style={iconStyle} icon={(props.isFake) ? faThumbsDown : faThumbsUp} /> </div>}
+                                position="left center"
+                                on="hover"
+                            >
+                                <div>{(props.isFake) ? "Our algorithm has detected that this article has a " + props.Percentage + " of being fake" : "Our algorithm has detected that this article has a " + props.Percentage + " of being true"}</div>
+                            </Popup>
+
+                            <DropdownButton variant="light" title="">
+                                <Dropdown.Item href="#/action-1">Share</Dropdown.Item>
+                                <Dropdown.Item href="#/action-2">Delete</Dropdown.Item>
                             </DropdownButton>
 
-
-
                         </div>
 
-                        <div style={{ width: "95%" }}>
-                            {props.Text}
+                        <div style={{ width: "90%" }}>
+                            <ReadMoreAndLess
+                                charLimit={300}
+                                readMoreText=" See More"
+                                readLessText=" See Less"
+                            >
+                                {props.Text}
+                            </ReadMoreAndLess>
                         </div>
-
-
                     </div>
                 </div>
             </div>

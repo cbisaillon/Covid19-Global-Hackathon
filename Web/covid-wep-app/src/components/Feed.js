@@ -21,32 +21,22 @@ export default () => {
         name: "Ricardo Milos",
         Picture: "https://i.kym-cdn.com/entries/icons/original/000/010/843/ricardo.jpg",
         Text: "Ricardo Milos is a Brazilian adult model known for his erotic dance video. His dance video, often referred to as Danced Like a Butterfly, inspired a series of MAD/animated videos on the Japanese video-hosting site Nico Nico Douga (NND) in mid-to-late 2011.The series helped to establish Milos as a character in the Gachimuchi/wrestling series. In mid-to-late 2018, people online began using Milos’ dance in bait-and-switch videos in reaction to the application TikTok.",
-        Boolean: "false",
+        isFake: false,
         Percentage: "100%",
         Time: "69 min ago"
     }
 
-    let test2 = {
-        name: "Ricardo Milos",
-        Picture: "https://i.kym-cdn.com/entries/icons/original/000/010/843/ricardo.jpg",
-        Text: "Ricardo Milos is a Brazilian adult model known for his erotic dance video. His dance video, often referred to as Danced Like a Butterfly, inspired a series of MAD/animated videos on the Japanese video-hosting site Nico Nico Douga (NND) in mid-to-late 2011.The series helped to establish Milos as a character in the Gachimuchi/wrestling series. In mid-to-late 2018, people online began using Milos’ dance in bait-and-switch videos in reaction to the application TikTok.",
-        Boolean: "false",
-        Percentage: "100%",
-        Time: "69 min ago"
-    }
-
-    let test3 = {
-        name: "Ricardo Milos",
-        Picture: "https://i.kym-cdn.com/entries/icons/original/000/010/843/ricardo.jpg",
-        Text: "Ricardo Milos is a Brazilian adult model known for his erotic dance video. His dance video, often referred to as Danced Like a Butterfly, inspired a series of MAD/animated videos on the Japanese video-hosting site Nico Nico Douga (NND) in mid-to-late 2011.The series helped to establish Milos as a character in the Gachimuchi/wrestling series. In mid-to-late 2018, people online began using Milos’ dance in bait-and-switch videos in reaction to the application TikTok.",
-        Boolean: "false",
-        Percentage: "100%",
-        Time: "69 min ago"
+    let test1 = {
+        name: "Pepe The Frog",
+        Picture: "https://i.kym-cdn.com/entries/icons/original/000/017/618/pepefroggie.jpg",
+        Text: "Pepe the Frog is an anthropomorphic frog character from the comic series Boy’s Club by Matt Furie. On 4chan, various illustrations of the frog creature have been used as reaction faces, including Feels Good Man, Sad Frog, Angry Pepe, Smug Frog and Well Meme'd.",
+        isFake: true,
+        Percentage: "69%",
+        Time: "420 min ago"
     }
 
     posts.push(test)
-    posts.push(test2)
-    posts.push(test3)
+    posts.push(test1)
 
     return (
         <Container>
@@ -62,7 +52,7 @@ export default () => {
                                     URL={object.URL}
                                     Picture={object.Picture}
                                     Text={object.Text}
-                                    Boolean={object.Boolean}
+                                    isFake={object.isFake}
                                     Percentage={object.Percentage}
                                     Time={object.Time}
                                   />          

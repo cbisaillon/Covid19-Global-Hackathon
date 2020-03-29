@@ -20,7 +20,6 @@ export default () => {
                             href=""
                             style={{ paddingTop: "auto" }}
                         >
-                            {/*<img src={Fb} alt="logo" height="40px" />*/}
                             Fakebook
                         </a>
                     }
@@ -37,9 +36,6 @@ export default () => {
                         preventScrolling: true
                     }}
                 >
-                    <NavItem>
-                        Search
-                    </NavItem>
                     <NavItem>
                         About
                     </NavItem>

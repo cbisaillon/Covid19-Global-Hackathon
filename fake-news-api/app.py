@@ -3,6 +3,7 @@ import boto3
 import json
 import requests
 import feedparser
+import random
 
 try:
     from StringIO import StringIO
@@ -39,6 +40,15 @@ def index():
 
 random_user_url = "https://randomuser.me/api/"
 
+# todo: Find more feeds
+feeds = [
+    'https://www.who.int/rss-feeds/covid19-news-english.xml',
+    'https://rss.nytimes.com/services/xml/rss/nyt/US.xml',
+    'https://rss.nytimes.com/services/xml/rss/nyt/World.xml',
+    "https://rss.cbc.ca/lineup/topstories.xml",
+    "https://rss.cbc.ca/lineup/canada.xml"
+]
+
 
 @app.route('/post-list')
 def postList():
@@ -70,11 +80,10 @@ def postList():
         })
 
     # Get random posts
-    feed = feedparser.parse('https://www.who.int/rss-feeds/covid19-news-english.xml')
-    # feed = feedparser.parse('https://rss.cbc.ca/lineup/topstories.xml')
     posts = []
 
     for i in range(per_page):
+        feed = feedparser.parse(random.choice(feeds))
         post_index = (page * per_page) + i
 
         if post_index > len(feed.entries) - 1:

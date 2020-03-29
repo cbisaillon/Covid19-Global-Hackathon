@@ -46,7 +46,8 @@ def preprocess_text(text):
 
     for i in range(nb_cuts + 1):
         text_part = ' '.join(text.split(' ')[i * delta: (i + 1) * delta])
-        parts.append(tokenizer.encode(text_part, return_tensors="pt", max_length=500).to(device))
+        if len(text_part.split(' ')) > 100:
+            parts.append(tokenizer.encode(text_part, return_tensors="pt", max_length=500).to(device))
 
     return parts
 

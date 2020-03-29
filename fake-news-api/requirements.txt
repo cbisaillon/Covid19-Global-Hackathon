@@ -4,3 +4,5 @@ chalice==1.13.0
 feedparser==5.2.1
 requests==2.23.0
 goose3==3.1.6
+PyMySQL==0.9.3
+python-dotenv==0.12.0

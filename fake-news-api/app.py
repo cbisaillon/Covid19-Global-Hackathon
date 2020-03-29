@@ -4,6 +4,7 @@ import json
 import requests
 import feedparser
 import random
+from goose3 import Goose
 
 try:
     from StringIO import StringIO
@@ -12,30 +13,16 @@ except ImportError:
 
 app = Chalice(app_name='fake-news-api')
 endpoint_name = "fake-news-endpoint"
+runtime = boto3.Session().client(service_name='sagemaker-runtime', region_name='us-east-2')
 
 
 @app.route('/predict', methods=['POST'])
 def index():
     # Connect to AWS
-    runtime = boto3.Session().client(service_name='sagemaker-runtime', region_name='us-east-2')
-
     if app.current_request.json_body is None or 'text' not in app.current_request.json_body.keys():
         return "You have to specify the text parameter in the POST request"
 
-    # Send the text to the SageMaker model
-    text = json.dumps({
-        'text': app.current_request.json_body['text']
-    })
-
-    try:
-        response = runtime.invoke_endpoint(EndpointName=endpoint_name,
-                                           Body=text,
-                                           ContentType='application/json',
-                                           Accept='Accept')
-    except Exception as e:
-        return str(e)
-
-    return str(response['Body'].read().decode('utf-8'))
+    return queryModel(app.current_request.json_body['text'])
 
 
 random_user_url = "https://randomuser.me/api/"
@@ -47,6 +34,9 @@ feeds = [
     'https://rss.nytimes.com/services/xml/rss/nyt/World.xml',
     "https://rss.cbc.ca/lineup/topstories.xml",
     "https://rss.cbc.ca/lineup/canada.xml"
+    "https://lifestyle.clickhole.com/rss", # FAKE
+    "https://www.theonion.com/rss", # FAKE
+    "https://www.thedailymash.co.uk/rss", # FAKE
 ]
 
 
@@ -95,6 +85,8 @@ def postList():
 
         text = get_article_from_url(url)
 
+        model_prediction = json.loads(queryModel(text))
+
         posts.append({
             'user': users[i],
             'post': {
@@ -102,13 +94,37 @@ def postList():
                 'text': text,
                 'link': url
             },
-            'is_fake': 1,
-            'chance': 0.993993939
+            'is_fake': model_prediction['result'],
+            'chance': model_prediction['chance'],
         })
 
     return posts
 
 
+def queryModel(text):
+    # Send the text to the SageMaker model
+    text = json.dumps({
+        'text': text
+    })
+
+    try:
+        response = runtime.invoke_endpoint(EndpointName=endpoint_name,
+                                           Body=text,
+                                           ContentType='application/json',
+                                           Accept='Accept')
+    except Exception as e:
+        return str(e)
+
+    return str(response['Body'].read().decode('utf-8'))
+
+
 def get_article_from_url(url):
-    #todo: Faire ca
-    return "salut"
+    response = requests.get(url)
+    article_extractor = Goose()
+    article = article_extractor.extract(raw_html=response.content)
+    text = article.cleaned_text
+
+    text = text.replace('\n', '').encode('ascii', 'ignore').decode('utf-8')
+    text = ' '.join(text.replace('\\"', '').split(' ')[:500])
+
+    return text

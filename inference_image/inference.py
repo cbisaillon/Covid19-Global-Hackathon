@@ -34,6 +34,7 @@ model = BertForSequenceClassification.from_pretrained("bert-base-uncased").to(de
 model.load_state_dict(torch.load(model_file))
 model.config.num_labels = 1
 
+
 def preprocess_text(text):
     parts = []
 
@@ -95,6 +96,7 @@ def sigterm_handler(nginx_pid, gunicorn_pid):
         pass
 
     sys.exit(0)
+
 
 def start_server():
     print('Starting the inference server with {} workers.'.format(model_server_workers))

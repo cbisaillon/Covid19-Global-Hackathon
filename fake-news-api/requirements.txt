@@ -1,3 +1,4 @@
 boto3==1.12.30
 beautifulsoup4==4.8.2
 chalice==1.13.0
+feedparser==5.2.1

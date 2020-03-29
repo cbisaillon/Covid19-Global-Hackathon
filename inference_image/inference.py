@@ -34,7 +34,6 @@ model = BertForSequenceClassification.from_pretrained("bert-base-uncased").to(de
 model.load_state_dict(torch.load(model_file))
 model.config.num_labels = 1
 
-
 def preprocess_text(text):
     parts = []
 
@@ -51,9 +50,10 @@ def preprocess_text(text):
     return parts
 
 
-@app.route('/inference', methods=['POST'])
+@app.route('/invocations', methods=['POST'])
 def inference():
-    text = request.args.get('text')
+    text = request.json['text']
+
     text_parts = preprocess_text(text)
     overall_output = torch.zeros((1, 2)).to(device)
     try:

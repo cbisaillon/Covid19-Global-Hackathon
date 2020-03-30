@@ -15,14 +15,9 @@ RUN apt-get -y update && apt-get install -y --no-install-recommends \
         (cd /usr/local/lib/python3.6/dist-packages/scipy/.libs; rm *; ln ../../numpy/.libs/* .) && \
         rm -rf /root/.cache
 
-RUN python3.6 -m pip install transformers==2.6.0
+RUN python3.6 -m pip install transformers==2.6.0 nltk==3.4.5
 
-#Install miniconda
-#RUN wget \
-#    https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
-#    && mkdir /root/.conda \
-#    && bash Miniconda3-latest-Linux-x86_64.sh -b \
-#    && rm -f Miniconda3-latest-Linux-x86_64.sh
+RUN python3.6 -m nltk.downloader stopwords
 
 COPY . /opt/program/
 

@@ -10,28 +10,19 @@ import os
 import multiprocessing
 import signal
 import sys
+import nltk
+from nltk.corpus import stopwords
+
+stop_words = set(stopwords.words('english'))
 
 app = Flask(__name__)
-# model_file = "/opt/ml/model/model_after_train.pt"
-model_file_tared = "model_after_train.pt.tar.gz"
-model_file = "model_after_train.pt"
+model_file = "/opt/ml/model/model_after_train.pt"
 
 device = torch.device('cpu')
-if torch.cuda.is_available():
-    device = torch.device('cuda')
-
-# Download the model
-s3 = boto3.client('s3')
-with open(model_file_tared, 'wb') as f:
-    s3.download_fileobj('fake-news-model', 'model_after_train.pt.tar.gz', f)
-
-# Extract the model
-tar_file = tarfile.open(model_file_tared)
-tar_file.extractall()
 
 tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 model = BertForSequenceClassification.from_pretrained("bert-base-uncased").to(device)
-model.load_state_dict(torch.load(model_file))
+model.load_state_dict(torch.load(model_file, map_location=torch.device('cpu')))
 model.config.num_labels = 1
 
 
@@ -46,32 +37,56 @@ def preprocess_text(text):
 
     for i in range(nb_cuts + 1):
         text_part = ' '.join(text.split(' ')[i * delta: (i + 1) * delta])
-        if len(text_part.split(' ')) > 100:
-            parts.append(tokenizer.encode(text_part, return_tensors="pt", max_length=500).to(device))
+        # remove stop words
+        # text_part = text_part.replace("\n", "")
+        # text_part = text_part.lower()
+        # text_part = " ".join([w for w in text_part.split(' ') if not w in stop_words])
+
+        parts.append(tokenizer.encode(text_part, return_tensors="pt", max_length=500).to(device))
 
     return parts
 
 
 @app.route('/invocations', methods=['POST'])
 def inference():
-    text = request.json['text']
+    texts = request.json['text']
 
-    text_parts = preprocess_text(text)
-    overall_output = torch.zeros((1, 2)).to(device)
-    try:
-        for part in text_parts:
-            if len(part) > 0:
-                overall_output += model(part.reshape(1, -1))[0]
-    except RuntimeError:
-        print("GPU out of memory, skipping this entry.")
+    results = []
 
-    overall_output = F.softmax(overall_output[0], dim=-1)
+    for text in texts:
+        text_parts = preprocess_text(text)
+        overall_output = torch.zeros((1, 2)).to(device)
+        try:
+            for part in text_parts:
+                if len(part) > 0:
+                    overall_output += model(part.reshape(1, -1))[0]
+        except RuntimeError:
+            print("GPU out of memory, skipping this entry.")
 
-    value, result = overall_output.max(0)
+        overall_output = F.softmax(overall_output[0], dim=-1)
+
+        value, result = overall_output.max(0)
+
+        a = {
+            'result': result.item(),
+            'chance': value.item()
+        }
+
+        if a['chance'] < 0.9 and a['result'] == 1:
+            chance = 1.0 - a['chance']
+            result = 0
+
+            results.append({
+                'result': result,
+                'chance': chance
+            })
+        else:
+            results.append(a)
+
+
 
     return {
-        'result': result.item(),
-        'chance': value.item()
+        'results': results
     }
 
 

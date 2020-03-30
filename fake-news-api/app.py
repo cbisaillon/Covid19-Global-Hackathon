@@ -1,7 +1,8 @@
-from chalice import Chalice
+from chalice import Chalice, Response
 import boto3
 import json
 import requests
+import re
 import feedparser
 import random
 from goose3 import Goose
@@ -9,6 +10,8 @@ import pymysql
 import os
 import sys
 from dotenv import load_dotenv
+
+from chalice import CORSConfig
 
 load_dotenv()
 
@@ -18,7 +21,7 @@ except ImportError:
     from io import StringIO
 
 app = Chalice(app_name='fake-news-api')
-endpoint_name = "fake-news-endpoint"
+endpoint_name = "fake-11"
 runtime = boto3.Session().client(service_name='sagemaker-runtime', region_name='us-east-2')
 
 
@@ -70,12 +73,13 @@ def postList():
     cursor.execute(query % (per_page))
     news = cursor.fetchall()
 
+    texts = []
+
     for i, new in enumerate(news):
         title = new[0]
         url = new[1]
         text = new[2]
-
-        model_prediction = json.loads(queryModel(text))
+        texts.append(text)
 
         posts.append({
             'user': users[i],
@@ -84,11 +88,22 @@ def postList():
                 'text': text,
                 'link': url
             },
-            'is_fake': model_prediction['result'],
-            'chance': model_prediction['chance'],
+            'is_fake': 0.0,#model_prediction['result'],
+            'chance': 0.0,#model_prediction['chance'],
         })
 
-    return posts
+    model_predictions = queryModel(texts)
+    for i, prediction in enumerate(model_predictions):
+        posts[i]['is_fake'] = prediction['result']
+        posts[i]['chance'] = prediction["chance"]
+
+    headers = {
+        'Access-Control-Allow-Origin': '*',
+        'x-requested-with': 'XMLHttpRequest'
+    }
+
+    return Response(body=posts, headers=headers)
+
 
 @app.route('/predict-url')
 def predictUrl():
@@ -98,13 +113,18 @@ def predictUrl():
     except Exception as e:
         return json.dumps({"error": str(e)})
 
-    return queryModel(text)
+    headers = {
+        'Access-Control-Allow-Origin': '*',
+        'x-requested-with': 'XMLHttpRequest'
+    }
+
+    return Response(body=queryModel([text])[0], headers=headers)
 
 
-def queryModel(text):
+def queryModel(texts):
     # Send the text to the SageMaker model
     text = json.dumps({
-        'text': text
+        'text': texts
     })
 
     try:
@@ -114,7 +134,10 @@ def queryModel(text):
                                            Accept='Accept')
     except Exception as e:
         pass
-    return str(response['Body'].read().decode('utf-8'))
+
+    a = json.loads(str(response['Body'].read().decode('utf-8')))
+
+    return a["results"]
 
 
 def get_article_from_url(url):
@@ -126,6 +149,13 @@ def get_article_from_url(url):
 
         text = text.replace('\n', '').encode('ascii', 'ignore').decode('utf-8')
         text = ' '.join(text.replace('\\"', '').split(' ')[:])
+
+        text = re.sub(r"\[(.*?)\]", '', text)
+        text = re.sub(r"\((.*?)\)", '', text)
+        # text = re.sub(r"\"(.*?)\"", '', text)
+        text = re.sub(r'(?<=[.,])(?=[^\s])', r' ', text)
+        text = text.lower()
+        # text = text.replace("\"", "")
 
         if len(text.split(' ')) < 200:
             raise Exception("Not enough words in the article")

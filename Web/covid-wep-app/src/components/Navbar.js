@@ -12,13 +12,14 @@ export default () => {
         <div style={navBarBackgroundStyle}>
             <Container>
                 <Navbar
+                    style={{color:"white"}}
                     className="custom-navbar"
                     alignLinks="right"
                     brand={
                         <a
                             className="brand-logo"
-                            href=""
-                            style={{ paddingTop: "auto" }}
+                            href="/"
+                            style={{ paddingTop: "auto", textDecoration: "none" }}
                         >
                             Fakebook
                         </a>
@@ -36,10 +37,10 @@ export default () => {
                         preventScrolling: true
                     }}
                 >
-                    <NavItem>
+                    <NavItem href='/About' style={{textDecoration:"none"}}>
                         About
                     </NavItem>
-                    <NavItem>
+                    <NavItem href='/Extension' style={{textDecoration:"none"}}>
                         Extension
                     </NavItem>
                 </Navbar>

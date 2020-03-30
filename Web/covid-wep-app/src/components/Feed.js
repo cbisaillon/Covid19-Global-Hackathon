@@ -1,9 +1,15 @@
 import React from 'react'
-import {Container, Row, Col} from 'react-materialize';
+import { Container, Row, Col } from 'react-materialize';
 import TestPost from './TestPost';
 import Post from './Post';
+import { trackPromise } from 'react-promise-tracker';
+import axios from 'axios';
+import { usePromiseTracker } from "react-promise-tracker";
+import Loader from 'react-loader-spinner';
+import InfiniteScroll from 'react-infinite-scroll-component';
 
-export default () => {
+
+export default class Feed extends React.Component {
 
     /*
     A post object will contain:
@@ -14,53 +20,98 @@ export default () => {
     -Boolean to indicate if fake or not
     -Percentage
     */
+    constructor(props) {
+        super(props)
 
-    let posts = []
+        this.state = {
+            posts: [],
+        }
+    }
+
+    componentDidMount() {
+
+        const config = {
+            headers: { 'Access-Control-Allow-Origin': '*' }
+        };
+        trackPromise(
+            axios.get('https://cors-anywhere.herokuapp.com/https://4ua127bd2e.execute-api.us-east-2.amazonaws.com/api/post-list?per_page=10', config)
+                .then(res => {
+                    this.setState({ posts: res.data })
+                })
+        );
+
+    }
+
+    fetchMoreData = () => {
+        const config = {
+            headers: { 'Access-Control-Allow-Origin': '*' }
+        };
+        
+        trackPromise(
+           axios.get('https://cors-anywhere.herokuapp.com/https://4ua127bd2e.execute-api.us-east-2.amazonaws.com/api/post-list?per_page=1', config)
+            .then(res => {
+                let joined = this.state.posts.concat(res.data);
+                this.setState({ posts: joined })
+            })  
+        );
+    }
+
     
-    let test = {
-        name: "Ricardo Milos",
-        Picture: "https://i.kym-cdn.com/entries/icons/original/000/010/843/ricardo.jpg",
-        Text: "Ricardo Milos is a Brazilian adult model known for his erotic dance video. His dance video, often referred to as Danced Like a Butterfly, inspired a series of MAD/animated videos on the Japanese video-hosting site Nico Nico Douga (NND) in mid-to-late 2011.The series helped to establish Milos as a character in the Gachimuchi/wrestling series. In mid-to-late 2018, people online began using Milos’ dance in bait-and-switch videos in reaction to the application TikTok.",
-        isFake: false,
-        Percentage: "100%",
-        Time: "69 min ago"
+
+    render() {
+
+        const LoadingIndicator = props => {
+            const { promiseInProgress } = usePromiseTracker();
+            
+            return (
+              promiseInProgress && 
+                <div
+                style={{
+                width: "100%",
+                height: "100",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center"
+              }}
+            >
+              <Loader type="ThreeDots" color="royalblue" height='100' width='100' />
+            </div>
+              );  
+             }
+
+
+        return (
+            <Container>
+                <Row>
+                    <Col m={12} s={12}>
+                        <TestPost />
+                        <InfiniteScroll
+                            dataLength={this.state.posts.length}
+                            next={this.fetchMoreData}
+                            hasMore={true}
+                            loader={<LoadingIndicator />}
+                        >
+                            {
+                            this.state.posts.map(
+                                (object, idx) => (
+                                    <Post
+                                        key={idx}
+                                        name={object.user.name}
+                                        URL={object.post.link}
+                                        Picture={object.user.profile_pic}
+                                        Text={object.post.text}
+                                        isFake={object.is_fake}
+                                        Percentage={Math.ceil(object.chance*100)}
+                                        Time={(idx >= 60) ? Math.ceil(idx/60)+" hrs ago" : idx+" min ago"}
+                                    />
+                                )
+                            )
+                        }
+                        </InfiniteScroll>    
+                    </Col>
+                </Row>
+            </Container>
+        )
     }
 
-    let test1 = {
-        name: "Pepe The Frog",
-        Picture: "https://i.kym-cdn.com/entries/icons/original/000/017/618/pepefroggie.jpg",
-        Text: "Pepe the Frog is an anthropomorphic frog character from the comic series Boy’s Club by Matt Furie. On 4chan, various illustrations of the frog creature have been used as reaction faces, including Feels Good Man, Sad Frog, Angry Pepe, Smug Frog and Well Meme'd.",
-        isFake: true,
-        Percentage: "69%",
-        Time: "420 min ago"
-    }
-
-    posts.push(test)
-    posts.push(test1)
-
-    return (
-        <Container>
-            <Row>
-                <Col m={12} s={12}>
-                    <TestPost />
-                    {
-                        posts.map(
-                            (object, index) => {
-                                return <Post
-                                    key={index}
-                                    name={object.name} 
-                                    URL={object.URL}
-                                    Picture={object.Picture}
-                                    Text={object.Text}
-                                    isFake={object.isFake}
-                                    Percentage={object.Percentage}
-                                    Time={object.Time}
-                                  />          
-                            }
-                        )
-                    }
-                </Col>
-            </Row>
-        </Container>
-    )
 }

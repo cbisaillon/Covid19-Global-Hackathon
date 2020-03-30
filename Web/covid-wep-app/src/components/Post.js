@@ -12,10 +12,6 @@ export default (props) => {
         marginTop: "25px"
     }
 
-    const iconStyle = {
-        margin: 12
-    }
-
     return (
         <div style={postStyle}>
             <div className="outerBox m10">
@@ -46,12 +42,13 @@ export default (props) => {
                                 </div>
                                 <div style={{ fontSize: 12, color: "gray" }}>{props.Time}</div>
                             </div>
-
-                            <Popup trigger={<div> <FontAwesomeIcon style={iconStyle} icon={(props.isFake) ? faThumbsDown : faThumbsUp} /> </div>}
+                            
+                            <div style={(props.isFake) ? {margin: 8, marginRight: 1, color: "red"} : {margin:8 , marginRight: 1, color:"green"}}  >{(props.isFake) ? "(Fake)" : "(True)"}</div>
+                            <Popup trigger={<div> <FontAwesomeIcon style={(props.isFake) ? {margin: 12, color: "red"} : {margin:12 , color:"green"}} icon={(props.isFake) ? faThumbsDown : faThumbsUp} /> </div>}
                                 position="left center"
                                 on="hover"
                             >
-                                <div>{(props.isFake) ? "Our algorithm has detected that this article has a " + props.Percentage + " of being fake" : "Our algorithm has detected that this article has a " + props.Percentage + " of being true"}</div>
+                                <div>{"Our algorithm has detected that this article has a " + props.Percentage + "% chance of being fake"}</div>
                             </Popup>
 
                             <DropdownButton variant="light" title="">
@@ -63,7 +60,7 @@ export default (props) => {
 
                         <div style={{ width: "90%" }}>
                             <ReadMoreAndLess
-                                charLimit={300}
+                                charLimit={360}
                                 readMoreText=" See More"
                                 readLessText=" See Less"
                             >
